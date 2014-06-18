@@ -1,0 +1,25 @@
+{
+  "name": "reply365",
+  "version": "0.0.1",
+  "homepage": "https://github.com/xiaokchengkun/reply365",
+  "authors": [
+    "xiaokchengkun <aegean.ck@gmail.com>"
+  ],
+  "description": "reply diyicai",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "modernizr": "*",
+    "jquery": "*",
+    "requirejs": "*",
+    "bootstrap": "*",
+    "angular": "*",
+    "angular-route": "*"
+  }
+}
