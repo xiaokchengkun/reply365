@@ -1,15 +1,14 @@
 <div ng-controller="reply365Controller">
-
+<button class="btn btn-danger fr" ng-click="notice()">测试桌面通知</button>
 	<section class="tweet-main">
 		<div class="panel panel-primary">
 			<div class="panel-heading">
-			<div class="btn-group fr">
-				<button class="btn btn-danger btn-xs"
-					ng-click="target.uid = 1878604">365头条</button>
-				<button class="btn btn-default btn-xs"
-					ng-click="target.uid = 3784367">测试</button>
-			</div>
-
+				<div class="btn-group fr">
+					<button class="btn btn-danger btn-xs"
+						ng-click="target.uid = 1878604">365头条</button>
+					<button class="btn btn-default btn-xs"
+						ng-click="target.uid = 3784367">测试</button>
+				</div>
 				<h3 class="panel-title">
 					<a target="_blank" href="http://cmwb.com/mylist/tahome.action?userid={{target.uid}}">目标uid</a>
 				</h3>
