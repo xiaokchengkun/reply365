@@ -2,6 +2,7 @@ var services = angular.module("reply365.services", []);
 
 services.factory("reply365Service", ["$http",
 	function($http){
+		var viewsUrl = "/static/views";
 		var reply365Service = {
 			target: {
 				uid: "", //目标个人主页的uid
@@ -19,13 +20,25 @@ services.factory("reply365Service", ["$http",
 				uid: "3784367"
 			}],
 
+			musics: [{
+				name: "We Are One",
+				uid: viewsUrl + "/we are one.mp3"
+			},{
+				name: "Drrr",
+				uid: viewsUrl + "/drrr.mp3"
+			}],
+
 			logs: {
 				list: [],
 				limit: 50
 			},
 
 			selected: {
-				user: {}
+				user: {},
+				music: {
+					name: "We Are One",
+					uid: viewsUrl + "/we are one.mp3"
+				}
 			}
 
 		};

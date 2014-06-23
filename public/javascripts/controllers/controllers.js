@@ -12,6 +12,7 @@ controllers.controller("reply365Controller", ["$scope", "reply365Service",
 		$scope.target = reply365Service.target;
 
 		$scope.users = reply365Service.users;
+		$scope.musics = reply365Service.musics;
 
 		$scope.logs = reply365Service.logs;
 
@@ -41,8 +42,8 @@ controllers.controller("reply365Controller", ["$scope", "reply365Service",
 				var response = http.data;
 
 				if($.isPlainObject(response)){
-					//if(response.errno == 6){
-					if(response.errno == 3 || response.errno == 2 || response.errno == 6){
+					if(response.errno == 6){
+					//if(response.errno == 3 || response.errno == 2 || response.errno == 6){
 						$scope.status.isStop = true;
 
 						$scope.audio.play();
@@ -118,11 +119,12 @@ controllers.controller("reply365Controller", ["$scope", "reply365Service",
 ]);
 
 
-controllers.directive("selectUser", ["reply365Service",
+controllers.directive("selectConfig", ["reply365Service",
 	function(reply365Service){
 		return {
 			link: function(scope, element, attrs){
 				var $element = $(element);
+				var type = attrs["selectConfig"];
 
 				var $button = $element.find("button:first-child");
 
@@ -132,10 +134,10 @@ controllers.directive("selectUser", ["reply365Service",
 
 				$element.on("click", "a", function(){
 					var index = $(this).attr("data-index");
-					var user = reply365Service.users[index];
-					reply365Service.selected.user = {
-						name: user.name,
-						uid: user.uid
+					var item = reply365Service[type+"s"][index];
+					reply365Service.selected[type] = {
+						name: item.name,
+						uid: item.uid
 					};
 					$element.removeClass("open");
 					scope.$apply("selected");
@@ -178,14 +180,15 @@ controllers.directive("replyForm", ["reply365Service",
 ]);
 
 controllers.directive("audioRemind", ["reply365Service",
-	function($scope, reply365Service){
+	function(reply365Service){
 		return {
 			link: function(scope, element, attrs){
+				scope.selected = reply365Service.selected;
 				var $element = $(element);
 				$(element).on("load", function(){
 					scope.status.audio.isReady = true;
 				});
-				var src = "/static/views/music.mp3";
+				var src = scope.selected.music.uid;
 				$element.attr({
 					controls: "true",
 					src: src,
@@ -193,6 +196,11 @@ controllers.directive("audioRemind", ["reply365Service",
 					loop: "true"
 				});
 				element.load();
+
+				scope.$watch("selected.music", function(){
+					var src = scope.selected.music.uid;
+					$element.attr("src", "").attr("src", src);
+				});
 
 				scope.$watch("status.audio", function(){
 					console.log(scope.status.audio);

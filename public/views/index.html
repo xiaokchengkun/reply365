@@ -1,4 +1,5 @@
 <div ng-controller="reply365Controller">
+<!--iframe ng-show="target.question" class="question-iframe" ng-src="https://www.google.com/search?q={{target.question}}"></iframe-->
 <button class="btn btn-danger fr" ng-click="notice()">测试桌面通知</button>
 	<section class="tweet-main">
 		<div class="panel panel-primary">
@@ -23,17 +24,29 @@
 				<h3 class="panel-title">当前参与用户</h3>
 			</div>
 			<div class="panel-body">
-				<div class="btn-group select-user" select-user>
-	        <button type="button" class="btn btn-success">{{selected.user.name || "选择参加用户"}}</button>
-	        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-	          <span class="caret"></span>
-	        </button>
-	        <ul class="dropdown-menu" role="menu">
-	          <li ng-repeat="user in users">
-	          	<a data-index="{{$index}}">{{user.name}} ({{user.uid}})</a>
-	          </li>
-	        </ul>
-	      </div>
+				<div class="btn-group select-config" select-config="user">
+			        <button type="button" class="btn btn-success">{{selected.user.name || "选择参加用户"}}</button>
+			        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+			          <span class="caret"></span>
+			        </button>
+			        <ul class="dropdown-menu" role="menu">
+			          <li ng-repeat="user in users">
+			          	<a data-index="{{$index}}">{{user.name}} ({{user.uid}})</a>
+			          </li>
+			        </ul>
+		      	</div>
+
+		      	<div class="btn-group select-config" select-config="music">
+			        <button type="button" class="btn btn-info">{{selected.music.name || "选择提示音"}}</button>
+			        <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
+			          <span class="caret"></span>
+			        </button>
+			        <ul class="dropdown-menu" role="menu">
+			          <li ng-repeat="music in musics">
+			          	<a data-index="{{$index}}">{{music.name}}</a>
+			          </li>
+			        </ul>
+		      	</div>
 
 				<ul class="list-unstyled">
 					<li class="form-horizontal">
@@ -100,7 +113,7 @@
 				</div>
 				<div class="panel-body">
 					{{target.question || "暂无"}}
-					<a ng-show="target.question" href="https://www.google.com/search?q={{target.question}}" target="_blank">去google搜索</a>
+					<a ng-show="target.question" ng-href="https://www.google.com/search?q={{target.question}}" target="_blank">去google搜索</a>
 				</div>
 			</div>
 		</div>
