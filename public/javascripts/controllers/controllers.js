@@ -19,61 +19,111 @@ controllers.controller("reply365Controller", ["$scope", "reply365Service",
 		$scope.selected = reply365Service.selected;
 
 		$scope.status = {
-			isStop: true,
-			isProgress: false,
+			tweet: {
+				isStop: true,
+				isProgress: false
+			},
+			comment: {
+				isStop: true,
+				isProgress: false
+			},
 			audio: {
 				isReady: false,
 				isPlay: false,
 				isStop: true
 			}
 		};
+		$scope.timer = {};
 
-		$scope.start = function(){
-			$scope.status.isStop = false;
-			$scope.audio.stop();
-			$scope.getData();
+		$scope.start = function(type){
+			$scope.status[type].isStop = false;
+			switch(type){
+				case "comment":
+					$scope.getComment();
+					break;
+				default:
+					$scope.audio.stop();
+					$scope.getTweet();
+			}
+
 		};
 
-		$scope.getData = function(){
+		$scope.getTweet = function(){
 			var query = {
 				uid: $scope.target.uid
 			};
-			var response = reply365Service.getData(query).then(function(http){
+			reply365Service.getData("tweet", query).then(function(http){
 				var response = http.data;
 
 				if($.isPlainObject(response)){
 					if(response.errno == 6){
 					//if(response.errno == 3 || response.errno == 2 || response.errno == 6){
-						$scope.status.isStop = true;
+						$scope.status.tweet.isStop = true;
 
 						$scope.audio.play();
 						//来个桌面提醒
 						//alert("有新消息！");
-						$scope.notice();
+						$scope.notice("tweet");
+
+						$scope.start("comment");
 					}
-					else if(response.errno && !$scope.status.isStop){
-						$scope.again();
+					else if(response.errno && !$scope.status.tweet.isStop){
+						$scope.again("tweet");
 					}
 				}else{
-					$scope.again();
+					$scope.again("tweet");
 				}
 			});
 		};
 
-		$scope.stop = function(){
-			$scope.status.isStop = true;
-			$scope.status.isProgress = false;
-
-			clearTimeout($scope.timer);
-			$scope.timer = null;
+		$scope.getComment = function(){
+			var query = {
+				rid: $scope.target.rid
+			};
+			reply365Service.getData("comment", query).then(function(http){
+				var response = http.data;
+				if($.isPlainObject(response)){
+					if(response.errno == 6){
+						$scope.notice("comment");
+					}
+					if(response.errno && !$scope.status.comment.isStop){
+						$scope.again("comment");
+					}
+				}else{
+					$scope.again("comment");
+				}
+			});
 		};
 
-		$scope.again = function(){
-			$scope.status.isProgress = true;
-			$scope.timer = setTimeout(function(){
-				$scope.status.isProgress = false;
-				$scope.getData();
-			}, 15000);
+
+		$scope.stop = function(type){
+			if(type == "tweet"){
+				$scope.status.tweet.isStop = true;
+				$scope.status.tweet.isProgress = false;
+			}else{
+				$scope.status.comment.isStop = true;
+				$scope.status.comment.isProgress = false;
+			}
+
+			clearTimeout($scope.timer[type]);
+			$scope.timer[type] = null;
+		};
+
+		$scope.again = function(type){
+			if(type == "tweet"){
+				$scope.status.tweet.isProgress = true;
+				$scope.timer.tweet = setTimeout(function(){
+					$scope.status.tweet.isProgress = false;
+					$scope.getTweet();
+				}, 15000);
+			}else{
+				$scope.status.isProgress = true;
+				$scope.timer.comment = setTimeout(function(){
+					$scope.status.comment.isProgress = false;
+					$scope.getComment();
+				}, 1000);
+			}
+
 		};
 
 		$scope.audio = {
@@ -91,18 +141,46 @@ controllers.controller("reply365Controller", ["$scope", "reply365Service",
 			}
 		};
 
-		$scope.notice = function(){
-			var title = "有新信息了!!!";
-			var options = {
-				dir: "ltr",
-				body: $scope.target.content || 0,
-				icon: "http://timg.cmwb.com/face/temp/middlehead.jpg"
+		$scope.notice = function(type){
+			var title,
+				link,
+				options = {
+					dir: "ltr",
+					icon: "http://timg.cmwb.com/face/temp/middlehead.jpg"
+				};
+			switch(type){
+				case "tweet":
+					title = "有新信息了!!!";
+					options.body = $scope.target.content || "";
+					link = "https://www.google.com/search?q=" + $scope.target.question;
+					break;
+				case "comment":
+					title = "新回复!";
+					options.body = ($scope.target.comment.user + ":" + $scope.target.comment.content) || "";
+					link = "https://www.google.com/search?q=" + $scope.target.comment.content;
+					break;
+				default:
+					title = "！！！！";
+					options.body = "有新信息出现~";
+			}
+			if(options.body == $scope.cache){
+				return;
+			}
+
+			$scope.cache = options.body;
+
+			var notificationAction = function(){
+				var notification = new Notification(title, options);
+				notification.onclick = function(){
+					window.open(link);
+				};
 			};
+
 			if (!("Notification" in window)) {
 				alert(title);
 			}
 			else if (Notification.permission === "granted") {
-				var notification = new Notification(title, options);
+				notificationAction();
 			}
 			else if (Notification.permission !== 'denied') {
 				Notification.requestPermission(function (permission) {
@@ -110,7 +188,7 @@ controllers.controller("reply365Controller", ["$scope", "reply365Service",
 						Notification.permission = permission;
 					}
 					if (permission === "granted") {
-						var notification = new Notification();
+						notificationAction();
 					}
 				});
 			}
@@ -149,7 +227,8 @@ controllers.directive("selectConfig", ["reply365Service",
 
 var domain = "http://cmwb.com";
 var clientUrlMap = {
-	getData: "/ajax/reply365/getdata?format=ajax",
+	getTweet: "/ajax/reply365/gettweet?format=ajax",
+	getComment: "/ajax/reply365/getcomment?format=ajax",
 	reply: domain + "/blog/commentSender.action",
 	test: "/"
 };

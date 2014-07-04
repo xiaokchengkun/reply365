@@ -34,7 +34,9 @@ services.factory("reply365Service", ["$http",
 			},
 
 			selected: {
-				user: {},
+				user: {
+					name: "xiaokchengkun"
+				},
 				music: {
 					name: "We Are One",
 					uid: viewsUrl + "/we are one.mp3"
@@ -48,7 +50,8 @@ services.factory("reply365Service", ["$http",
 		};
 
 		var clientUrlMap = {
-			getData: "/ajax/reply365/getdata",
+			tweet: "/ajax/reply365/gettweet",
+			comment: "/ajax/reply365/getcomment",
 			reply: domain + "/blog/commentSender.action"
 		};
 
@@ -56,9 +59,8 @@ services.factory("reply365Service", ["$http",
 
 		$.extend(reply365Service, {
 			//从后段接数据
-			getData: function(query){
-				return $http.post(clientUrlMap.getData, query).success(function(response){
-					console.log(response);
+			getData: function(type, query){
+				return $http.post(clientUrlMap[type], query).success(function(response){
 					var errno = response.errno;
 					var logs = response.logs || [];
 					var target = response.target;
@@ -66,7 +68,8 @@ services.factory("reply365Service", ["$http",
 					if(scope.logs.list.length >= scope.logs.limit){
 						scope.logs.list.length = scope.logs.limit;
 					}
-					$.extend(scope.target, target);
+					console.log(target);
+					$.extend(true, scope.target, target);
 					if(response.errno){
 
 					}

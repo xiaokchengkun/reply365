@@ -6,7 +6,8 @@ var moment = require("moment");
 var queryString=require("querystring");
 
 var counter = {
-	data: 1
+	tweet: 1,
+	comment: 1
 };
 
 var reply365 = {
@@ -18,33 +19,33 @@ var reply365 = {
 		this.errno = {
 			"0": "ok",
 			"1": "网络错误",
-			"2": "有匹配，但不是最新",
-			"3": "无匹配",
+			"2": "微博有匹配，但不是最新",
+			"3": "微博无匹配",
 			"4": "发送请求超时",
 			"5": "接受数据超时",
-			"6": "结束"
+			"6": "结束",
+			"7": "暂无评论",
+			"8": "有评论了！"
 		};
 
 		this.url = url.parse(req.url);
 		//this.query 包含目标uid
-    this.query = req.body;
-    this.callback = callback;
+	    this.query = req.body;
+	    this.callback = callback;
 
 
-    //uid是必填项
-    if(!this.query.uid){
-    	return;
-    }
+	    //uid是必填项
+	    if(!this.query.uid && !this.query.rid){
+	    	return;
+	    }
 
-    //目标信息
-    this.target = {
-    	uid: this.query.uid,
-    	rid: 0, //最新微博的回复id
-    	content: "",	//匹配微博全文
-    	question: "" //匹配微博的问题
-    };
+	    //目标信息
+	    this.target = {
+	    	uid: this.query.uid,
+	    	rid: this.query.rid || 0 //最新微博的回复id
+	    };
 
-    //设置抓取参数
+	    //设置抓取参数
 
 		//获取微博时间间隔
 		this.getDataTime = this.query.getDataTime || 15000;
@@ -65,14 +66,19 @@ var reply365 = {
 
 		//开始干活！
 		this.log("开始干活！");
-		this.getData();
+
+		if(req.url.indexOf("tweet") != -1){
+			this.getData();
+		}else if(req.url.indexOf("comment") != -1){
+			this.getComment();
+		}
 	},
 
 	getData: function(){
 		var me = this;
 		var reqTimeout, resTimeout, req;
-		me.log("开始第" + counter.data +"次抓取最新微博...");
-		var url = "http://cmwb.com/mylist/tahome.action?userid=" + me.target.uid;
+		me.log("开始第" + counter.tweet +"次抓取最新微博...");
+		var url = "http://cmwb.com/mylist/tahome.action?userid=" + me.target.uid + "&random=" + Math.random();
 		req = http.get(url, function(response){
 			me.clear(reqTimeout);
 			resTimeout = me.responseTimeOut(response, me.responseLimit.data);
@@ -82,8 +88,11 @@ var reply365 = {
 			});
 			response.on("end", function(){
 				me.clear(resTimeout);
+				delete me.target.comment;
+				me.target.content = null;
+				me.target.question = null;
 				me.log("获取微博成功！");
-				counter.data ++;
+				counter.tweet ++;
 				var $ = cheerio.load(source);
 				var $tweetList = $("#idLeftCont2 ul li");
 				var filterWord = "竞猜内容";
@@ -128,6 +137,72 @@ var reply365 = {
 			});
 		}).on("error", function(e){
 			me.log("抓取微博错误信息：" + e, 1);
+			me.clear(reqTimeout);
+			me.clear(resTimeout);
+		});
+
+		reqTimeout = me.requestTimeOut(req, me.requestLimit.data);
+	},
+
+	getComment: function(){
+		var me = this;
+		if(!me.target.rid){
+			return;
+		}
+		var reqTimeout, resTimeout, req;
+		me.log("开始第" + counter.comment +"次抓取评论...");
+		//var url = "http://cmwb.com/mylist/commentgetcomments.action?topicid=" + me.target.rid;
+		var url = "http://cmwb.com/mylist/tatopic.action?topicid=" + me.target.rid  + "&random=" + Math.random();
+		req = http.get(url, function(response){
+			me.clear(reqTimeout);
+			delete me.target.content;
+			delete me.target.question;
+			me.target.comment = null;
+			resTimeout = me.responseTimeOut(response, me.responseLimit.data);
+			var source = "";
+			response.on("data", function(data){
+				source += data;
+			});
+			response.on("end", function(){
+				me.clear(resTimeout);
+				me.log("获取评论列表成功！");
+				counter.comment ++;
+				var $ = cheerio.load(source);
+				var commentNewest = $("#topicComments .hfzr")[0];
+				if(!commentNewest){
+					me.log("但是还没有评论内容", 7);
+					return;
+				}
+				$(commentNewest).find("span").remove();
+				var text = $(commentNewest).text().replace(/<[^<,\s]>/g, "");
+				var time = text.match(/\([^)]+\)/);
+				if(time && time.length){
+					text = text.replace(time[0], "");
+				}
+
+				//var data = JSON.parse(source);
+				//data = JSON.parse(data);
+				//if(!data || data.length === 0){
+				//	me.log("但是还没有评论内容", 7);
+				//	return;
+				//}
+				//
+				text = text.split("：");
+
+				var comment = text;
+				if(text.length>0){
+					comment = {
+						user: text[0].replace(/\s/g, ""),
+						content: text[1].replace(/\s/g, ""),
+						time: time
+					};
+				}
+				me.target.comment = comment;
+
+				me.log("评论列表：" + comment.user + ":" + comment.content + comment.time, 6);
+			});
+		}).on("error", function(e){
+			me.log("抓取评论错误信息：" + e, 1);
 			me.clear(reqTimeout);
 			me.clear(resTimeout);
 		});

@@ -66,17 +66,23 @@
 			ng-click="audio.stop()">关闭音乐</button>
 
 		<button class="btn btn-primary"
-			ng-disabled="!status.isStop || !target.uid || !selected.user.name"
-			ng-click="start()">开始抓取</button>
+			ng-disabled="!status.tweet.isStop || !target.uid || !selected.user.name"
+			ng-click="start('tweet')">开始抓取微博</button>
 		<button class="btn btn-danger"
-			ng-disabled="status.isStop || !target.uid || !selected.user.name"
-			ng-click="stop()">停止抓取</button>
+			ng-disabled="status.tweet.isStop || !target.uid || !selected.user.name"
+			ng-click="stop('tweet')">停止抓取微博</button>
+		<button class="btn btn-danger"
+			ng-disabled="!status.comment.isStop"
+			ng-click="start('comment')">开始抓取评论</button>
+		<button class="btn btn-danger"
+			ng-disabled="status.comment.isStop"
+			ng-click="stop('comment')">停止抓取评论</button>
 
 
 		<div class="tweet-terminal-wrapper">
 			<div class="terminal-progress">
 				<div class="progress progress-striped active">
-				  <div class="progress-bar progress-bar-info terminal-wait" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" ng-class="{'terminal-get': status.isProgress}">
+				  <div class="progress-bar progress-bar-info terminal-wait" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" ng-class="{'terminal-get': status.tweet.isProgress}">
 				    <span class="sr-only"></span>
 				  </div>
 				</div>
